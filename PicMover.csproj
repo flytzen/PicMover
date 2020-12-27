@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ExifLib" Version="1.7.0" />
+    <PackageReference Include="MetadataExtractor" Version="2.4.3" />
   </ItemGroup>
 
 </Project>

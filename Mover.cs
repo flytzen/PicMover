@@ -2,21 +2,28 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ExifLib;
 
 namespace PicMover
 {
     public class Mover
     {
-        private static List<string> extensions = new List<string>{ "*.jpg", "*.mrw" };
+        private readonly string sourceFolder;
         private readonly string targetFolder;
+        private readonly string[] extensions;
 
-        public Mover(string targetFolder)
+        public Mover(string sourceFolder, string targetFolder, params string[] extensions)
         {
+            this.sourceFolder = sourceFolder;
             this.targetFolder = targetFolder;
+            this.extensions = extensions;
         }
 
-        public void Move(string directory)
+        public void Move()
+        {
+            this.Move(this.sourceFolder);
+        }
+
+        private void Move(string directory)
         {
             var subDirs = Directory.EnumerateDirectories(directory);
             foreach(var subdir in subDirs)
@@ -32,34 +39,21 @@ namespace PicMover
                     EvaluateFile(file);
                 }
             }
+            var t1 = Directory.EnumerateDirectories(directory);
+            var t2 = Directory.EnumerateFiles(directory);
             if (!Directory.EnumerateDirectories(directory).Any() && !Directory.EnumerateFiles(directory).Any())
             {
-                Directory.Delete(directory);
+                //Directory.Delete(directory, true);
             }
         }
 
         private void EvaluateFile(string file)
         {
-            DateTime datePictureTaken = default;
+            DateTime? datePictureTaken = DateExtractor.GetCreatedDate(file);
 
-            try
+            if (datePictureTaken.HasValue)
             {
-                using (ExifReader reader = new ExifReader(file))
-                {
-                    reader.GetTagValue<DateTime>(ExifTags.DateTimeDigitized, out datePictureTaken);
-                }
-            }
-            catch (ExifLibException e)
-            {
-                Console.WriteLine("{0} - No date taken: {1}:", file, e.Message);
-            }
-            catch (System.IO.EndOfStreamException)
-            {
-                Console.WriteLine("{0} is empty", file);
-            }
-            if (datePictureTaken != default)
-            {
-                MoveFile(file, datePictureTaken);
+                MoveFile(file, datePictureTaken.Value);
             }
             else
             {
